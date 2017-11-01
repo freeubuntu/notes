@@ -1,0 +1,14 @@
+环境：centos6.6 32位，重启网络，报以下错误：
+vm 10.0
+[root@niejicai network-scripts]# ifup eth1
+Error: Connection activation failed: The connection is not for this device.
+
+解决方法：
+
+[root@niejicai]# chkconfig NetworkManager off
+[root@niejicai]# chkconfig network on
+[root@niejicai]# service NetworkManager stop
+[root@niejicai]# service network start
+
+5、然后重新启动网络，即可
+RTNETLINK answers: File exists
