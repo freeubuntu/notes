@@ -1,0 +1,11 @@
+需要修改两处：一处是/etc/sysconfig/network，另一处是/etc/hosts，只修改任一处会导致系统启动异常。首先切换到root用户。
+
+    /etc/sysconfig/network
+
+用任一款你喜爱的编辑器打开该文件，里面有一行 HOSTNAME=localhost.localdomain (如果是默认的话），修改 localhost.localdomain 为你的主机名。
+
+    /etc/hosts
+
+打开该文件，会有一行 127.0.0.1 localhost.localdomain localhost 。其中 127.0.0.1 是本地环路地址， localhost.localdomain 是主机名(hostname)，也就是你待修改的。localhost 是主机名的别名（alias），它会出现在Konsole的提示符下。将第二项修改为你的主机名，第三项可选。
+
+将上面两个文件修改完后，并不能立刻生效。如果要立刻生效的话，可以用 hostname your-hostname 作临时修改，它只是临时地修改主机名，系统重启后会恢复原样的。但修改上面两个文件是永久的，重启系统会得到新的主机
