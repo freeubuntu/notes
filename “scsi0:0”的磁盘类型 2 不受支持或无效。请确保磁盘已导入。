@@ -1,0 +1,32 @@
+今天下载了一个虚拟机应用（zenoss监控）。下载的文件是在vmware workstation平台上面运行的。
+但我要导入到VMware VSphere ESXI5.1上运行，开启电源失败，提示如下信息：
+
+打开虚拟机 zenoss 的电源时，会收到来自 ESX 主机的错误。
+无法启动虚拟机。
+模块 DevicePowerOn 打开电源失败。
+无法为 scsi0:0“/vmfs/volumes/51dc3538-bbdf69dc-6e61-782bcb765b0f/zenoss_core-4.2.5-1998-x86_64/zenoss_core-4.2.5-1998-x86_64.vmdk” 创建虚拟 SCSI 设备
+无法打开磁盘 scsi0:0: 磁盘类型 7 不受支持或无效。请确保磁盘已导入。
+
+
+可以确定的是我硬盘的vmdk文件存在，应该是版本问题。
+
+查询官方资料后发现：
+在VMware Workstation，VMware Fusion 或VMware Player平台上运行的虚拟机如果需要在Vmware ESX主机上运行，必须用Vmware vCenter Converter工具转换成ESX主机兼容的格式。
+当然，如果虚拟机的磁盘镜像文件如果已经被导入到ESX主机，则可以使用vmkfstools 工具手动将磁盘格式进行转换。
+命令如下：
+
+vmkfstools -i <HostedVirtualDisk>  <ESXVirtualDisk>
+
+
+所以，我需要使用vmkfstools工具将zenoss_core-4.2.5-1998-x86_64.vmdk文件转换成ESX主机兼容的格式：
+
+cd /vmfs/volumes/51dc3538-bbdf69dc-6e61-782bcb765b0f/zenoss_core-4.2.5-1998-x86_64/
+vmkfstools -i zenoss_core-4.2.5-1998-x86_64.vmdk  zenoss_core-4.2.5-1998-x86_64-new.vmdk -d thin
+备注：zenoss_core-4.2.5-1998-x86_64-new.vmdk就是转换后的磁盘名字。  -d选项为：使用精简置备模式。节省空间。
+旧文件可以删除。
+
+
+转换后将zenoss_core-4.2.5-1998-x86_64-new.vmdk磁盘添加到虚拟机中，顺利开机。
+
+
+本文出自 “systems” 博客，请务必保留此出处http://systems.blog.51cto.com/2500547/1379674
