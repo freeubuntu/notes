@@ -1,0 +1,183 @@
+CentOS 7拨号上网（ADSL & PPPoE）
+
+步骤概述：
+
+1、搜寻PPPoE相关软件，本人使用的是rp-pppoe
+
+yum search pppoe
+
+2、使用yum安装rp-pppoe
+
+yum install rp-pppoe -y
+
+3、开始配置PPPoE连接
+
+pppoe-setup
+
+4、输入ISP提供的账户
+
+5、输入以太网卡代号，默认是eth0（注：CentOS 7已不是默认eth0，自行使用ifconfig命令即可找到）
+
+6、配置：若长时间连线，连线会被自动中断（我不干，选no）
+
+7、配置主DNS服务器
+
+8、配置次DNS服务器
+
+9、两次输入账户密码以确认
+
+10、配置普通账户是否有网络连接权限
+
+11、配置防火墙（没有特殊需求选0就OK）
+
+12、配置是否开机自动拨号连接
+
+13、确认刚填写的配置信息
+
+14、连接网络尽情享受吧！
+
+相关命令@ 连接网络：/sbin/ifup ppp0，断开连接：/sbin/ifdown ppp0，查看网络状态：/sbin/pppoe-status
+
+................. 这是华丽丽的分割线 ......................
+
+获取以太网卡代号
+
+[plain] view plain copy
+[dsp@dsp Desktop]$ ifconfig  
+enp9s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500                # 有线网卡  
+ether 20:1b:06:3d:22:05  txqueuelen 1000  (Ethernet)  
+RX packets 0  bytes 0 (0.0 B)  
+RX errors 0  dropped 2297  overruns 0  frame 0  
+TX packets 0  bytes 0 (0.0 B)  
+TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0  
+device interrupt 18    
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536  
+inet 127.0.0.1  netmask 255.0.0.0  
+inet6 ::1  prefixlen 128  scopeid 0x10<host>  
+loop  txqueuelen 0  (Local Loopback)  
+RX packets 2  bytes 110 (110.0 B)  
+RX errors 0  dropped 0  overruns 0  frame 0  
+TX packets 2  bytes 110 (110.0 B)  
+TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0  
+
+virbr0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500  
+inet 192.168.122.1  netmask 255.255.255.0  broadcast 192.168.122.255  
+ether 52:54:00:36:45:23  txqueuelen 0  (Ethernet)  
+RX packets 0  bytes 0 (0.0 B)  
+RX errors 0  dropped 0  overruns 0  frame 0  
+TX packets 0  bytes 0 (0.0 B)  
+TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0  
+
+wlp8s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500                 # 无线网卡  
+inet 192.168.0.151  netmask 255.255.255.0  broadcast 192.168.0.255  
+inet6 fe80::4ad2:24ff:fee8:f962  prefixlen 64  scopeid 0x20<link>  
+ether 48:d2:24:e8:f9:62  txqueuelen 1000  (Ethernet)  
+RX packets 20017  bytes 16100210 (15.3 MiB)  
+RX errors 0  dropped 0  overruns 0  frame 0  
+TX packets 18263  bytes 2641746 (2.5 MiB)  
+TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0  
+
+配置rp-pppoe客户端
+[plain] view plain copy
+[root@dsp Desktop]# pppoe-setup  
+Welcome to the PPPoE client setup.  First, I will run some checks on  
+your system to make sure the PPPoE client is installed properly...  
+
+LOGIN NAME  
+
+Enter your Login Name (default dsp): 12345      　　# 网络服务提供商提供的账户  
+
+INTERFACE  
+
+Enter the Ethernet interface connected to the PPPoE modem  
+For Solaris, this is likely to be something like /dev/hme0.  
+For Linux, it will be ethX, where 'X' is a number.  
+(default eth0): enp9s0                          　　# 选择以太网卡，有线网卡  
+
+Do you want the link to come up on demand, or stay up continuously?  
+If you want it to come up on demand, enter the idle time in seconds  
+after which the link should be dropped.  If you want the link to  
+stay up permanently, enter 'no' (two letters, lower-case.)  
+NOTE: Demand-activated links do not interact well with dynamic IP  
+addresses.  You may have some problems with demand-activated links.  
+Enter the demand value (default no): no         　　# 输入no，否则若长时间连线，连线会被自动中断  
+
+DNS  
+
+Please enter the IP address of your ISP's primary DNS server.  
+If your ISP claims that 'the server will provide dynamic DNS addresses',  
+enter 'server' (all lower-case) here.  
+If you just press enter, I will assume you know what you are  
+doing and not modify your DNS setup.  
+Enter the DNS information here: 8.8.8.8         　　# 主DNS服务器IP，本人使用Google Public DNS  
+Please enter the IP address of your ISP's secondary DNS server.  
+If you just press enter, I will assume there is only one DNS server.  
+Enter the secondary DNS server address here: 8.8.4.4      　　# 二级DNS服务器IP  
+
+PASSWORD　　　　　　　　　　　　　　　　　　　　　　　　　# 账户对应的密码，需两次输入以确认无误  
+
+Please enter your Password:   
+Please re-enter your Password:   
+
+USERCTRL  
+
+Please enter 'yes' (three letters, lower-case.) if you want to allow  
+normal user to start or stop DSL connection (default yes): yes  # 普通用户是否可以启动停止网络连接  
+
+FIREWALLING  
+
+Please choose the firewall rules to use.  Note that these rules are  
+very basic.  You are strongly encouraged to use a more sophisticated  
+firewall setup; however, these will provide basic security.  If you  
+are running any servers on your machine, you must choose 'NONE' and  
+set up firewalling yourself.  Otherwise, the firewall rules will deny  
+access to all standard servers like Web, e-mail, ftp, etc.  If you  
+are using SSH, the rules will block outgoing SSH connections which  
+allocate a privileged source port.  
+
+The firewall choices are:  
+0 - NONE: This script will not set any firewall rules.  You are responsible  
+for ensuring the security of your machine.  You are STRONGLY  
+recommended to use some kind of firewall rules.  
+1 - STANDALONE: Appropriate for a basic stand-alone web-surfing workstation  
+2 - MASQUERADE: Appropriate for a machine acting as an Internet gateway  
+for a LAN  
+Choose a type of firewall (0-2): 0　　　　　　　　　　　　　　　# 选 0 吧  
+
+Start this connection at boot time  
+
+Do you want to start this connection at boot time?  
+Please enter no or yes (default no):yes　　　　　　　　　　　　# 是否系统启动是就连接网络  
+
+** Summary of what you entered **　　　　　　　　　　　　　　　  
+
+Ethernet Interface: enp9s0  
+User name:          12345  
+Activate-on-demand: No  
+Primary DNS:        8.8.8.8  
+Secondary DNS:      8.8.4.4  
+Firewalling:        NONE  
+User Control:       yes  
+Accept these settings and adjust configuration files (y/n)? y　　　　# 确认刚才输入的网络配置信息  
+Adjusting /etc/sysconfig/network-scripts/ifcfg-ppp0  
+Adjusting /etc/resolv.conf  
+(But first backing it up to /etc/resolv.conf.bak)  
+Adjusting /etc/ppp/chap-secrets and /etc/ppp/pap-secrets  
+(But first backing it up to /etc/ppp/chap-secrets.bak)  
+(But first backing it up to /etc/ppp/pap-secrets.bak)  
+
+Congratulations, it should be all set up!  
+
+Type '/sbin/ifup ppp0' to bring up your xDSL link and '/sbin/ifdown ppp0'　# rp-pppoe的操作命令  
+to bring it down.  
+Type '/sbin/pppoe-status /etc/sysconfig/network-scripts/ifcfg-ppp0'  
+to see the link status.  
+
+[root@dsp Desktop]# /sbin/ifup ppp0　　　　　　# 启动网络连接  
+[root@dsp Desktop]# /sbin/pppoe-status　　　　# 查看网络连接状态  
+pppoe-status: Link is up and running on interface ppp0  
+6: ppp0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1492 qdisc pfifo_fast state UNKNOWN qlen 3  
+link/ppp   
+inet 10.198.0.17 peer 10.198.1.1/32 scope global ppp0  
+valid_lft forever preferred_lft forever
