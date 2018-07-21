@@ -1,0 +1,127 @@
+http://www.cppblog.com/wolf/articles/74928.html
+
+http://www.cppblog.com/wolf/articles/77828.html
+
+http://www.jb51.net/article/34990.htm
+
+C和C++之间库的互相调用
+
+extern "C"的理解：
+很多人认为"C"表示的C语言，实际并非如此，"C"表示的是一种链接约定，只是因C和C++语言之间的密切关系而在它们之间更多的应用而已。实际上Fortran和汇编语言也常常使用，因为它们也正好符合C实现的约定。
+extern "C"指令描述的是一种链接约定，它并不影响调用函数的定义，即时做了该声明，对函数类型的检查和参数转换仍要遵循C++的标准，而不是C。
+
+2.extern "C"的作用：
+不同的语言链接性是不同的，那么也决定了它们编译后的链接符号的不同，比如一个函数void fun(double d)，C语言会把它编译成类似_fun这样的符号，C链接器只要找到该函数符号就可以链接成功，它假设参数类型信息是正确的。而C++会把这个函数编译成类似_fun_double或_xxx_funDxxx这样的符号，在符号上增加了类型信息，这也是C++可以实现重载的原因。
+那么，对于用C编译器编译成的库，用C++直接链接势必会出现不能识别符号的问题，是的，需要extern "C"的时刻来了，它就是干这个用的。extern "C" 的作用就是让编译器知道要以C语言的方式编译和连接封装函数。
+
+3.在C++中调用C库的例子：
+1).做一个C动态库：
+// hello.c:
+
+#include <stdio.h>
+
+void hello()
+{
+  printf("hello\n");
+}
+
+ 
+
+编译并copy到系统库目录下(也可以自己定义库目录，man ldconfig):
+[root@coredump test]# gcc --shared -o libhello.so hello.c
+[root@coredump test]# cp libhello.so /lib/
+2).写个C++程序去调用它：
+// test.cpp
+
+#include <iostream>
+
+#ifdef __cplusplus
+extern "C" {               // 告诉编译器下列代码要以C链接约定的模式进行链接
+#endif
+
+void hello();
+
+#ifdef __cplusplus
+}
+#endif
+
+int main()
+{
+  hello();
+
+  return 0;
+}
+
+
+编译并运行：
+[root@coredump test]# g++ test.cpp -o test -lhello
+[root@coredump test]# ./test
+hello
+[root@coredump test]#
+3).__cplusplus宏的条件编译：
+为什么要加这个条件编译呢？小沈阳有话：小妹，这是为什么呢？
+因为这种技术也可能会用在由C头文件产生出的C++文件中，这样使用是为了建立起公共的C和C++文件，也就是保证当这个文件被用做C文件编译时，可以去掉C++结构，也就是说，extern "C"语法在C编译环境下是不允许的。
+比如：将上面的test.cpp更名为test.c，将头文件改为stdio.h，将条件编译去掉，再用gcc编译就可以看到效果。而即使做了上面的修改，如果用g++编译就可以正常使用，这就是我上面说的“公共的C和C++文件”的意思。
+
+4.C调用C++库：
+C++调用C库看上去也不是那么困难，因为C++本身就有向前(向C)兼容的特性，再加上纯天然的extern "C"约定，使得一切都是那么自然。而让C调用C++的库似乎就没那么容易，不过也不是不可以的。
+说到这里我得休息一下，大中午的，出去抽根烟先，不过我也相信如果你不知道答案，看到这里的时候肯定在到处找板砖，恨不得敲开我的脑壳子。我能理解，我也习惯了，我有个学姐一看到我第一反应就是扔出一块砖头先！
+言归正传，还是要借助这纯天然的extern "C"。
+
+1)做一个C++库：
+// world.cpp
+
+#include <iostream>
+
+void world()
+{
+  std::cout << "world" << std::endl;
+}
+
+
+编译并copy到系统库目录下:
+[root@coredump test]# g++ --shared -o libworld.so world.cpp
+[root@coredump test]# cp libworld.so /lib/
+2)做一个中间接口库，对C++库进行二次封装：
+// mid.cpp
+
+#include <iostream>
+
+void world();
+
+#ifdef __cplusplus
+extern "C" {  // 即使这是一个C++程序，下列这个函数的实现也要以C约定的风格来搞！
+#endif
+
+  void m_world()
+  {
+    world();
+  }
+
+#ifdef __cplusplus
+}
+#endif
+
+
+其中方法m_world即为libworld库中world方法的二次封装，编译并copy到系统库目录下:
+[root@coredump test]# g++ --shared -o libmid.so mid.cpp -lworld
+[root@coredump test]# cp libmid.so /lib/
+3).C程序通过链接二次接口库去调用C++库：
+// test.c
+
+#include <stdio.h>
+
+int main()
+{
+  m_world();
+
+  return 0;
+}
+
+
+编译并运行：
+[root@coredump test]# gcc test.c -l mid -o test
+[root@coredump test]# ./test
+world
+[root@coredump test]# 
+注：如果对于C++库中含有类的，可以在二次接口函数中生成临时对象来调用对应的功能函数，当然要根据实际情况来定了。
