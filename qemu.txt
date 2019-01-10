@@ -1,0 +1,1 @@
+qemu-img convert -f qcow linux.img -O vmdk linux.vmdk
