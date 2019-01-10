@@ -1,0 +1,69 @@
+vmkfstools -h
+No valid command specified
+
+
+OPTIONS FOR FILE SYSTEMS:
+
+vmkfstools -C --createfs [vmfs3|vmfs5]
+               -b --blocksize #[mMkK]
+               -S --setfsname fsName
+           -Z --spanfs span-partition
+           -G --growfs grown-partition
+   deviceName
+
+           -P --queryfs -h --humanreadable
+           -T --upgradevmfs
+   vmfsPath
+           -y --reclaimBlocks vmfsPath [--reclaimBlocksUnit #blocks]
+
+OPTIONS FOR VIRTUAL DISKS:
+
+vmkfstools -c --createvirtualdisk #[gGmMkK]
+               -d --diskformat [zeroedthick (后置0)
+                               |thin (后分配空间)
+                               |eagerzeroedthick (前置0)
+                               ]
+               -a --adaptertype [buslogic|lsilogic|ide
+                                |lsisas|pvscsi]
+               -W --objecttype [file|vsan]
+               --policyFile <fileName>
+           -w --writezeros
+           -j --inflatedisk
+           -k --eagerzero
+           -K --punchzero
+           -U --deletevirtualdisk
+           -E --renamevirtualdisk srcDisk
+           -i --clonevirtualdisk srcDisk
+               -d --diskformat [zeroedthick
+                               |thin
+                               |eagerzeroedthick
+                               |rdm:<device>|rdmp:<device>
+                               |2gbsparse]
+               -W --object [file|vsan]
+               --policyFile <fileName>
+               -N --avoidnativeclone
+           -X --extendvirtualdisk #[gGmMkK]
+               [-d --diskformat eagerzeroedthick]
+           -M --migratevirtualdisk
+           -r --createrdm /vmfs/devices/disks/...
+           -q --queryrdm
+           -z --createrdmpassthru /vmfs/devices/disks/...
+           -v --verbose #
+           -g --geometry
+           -x --fix [check|repair]
+           -e --chainConsistent
+           -Q --objecttype name/value pair
+           --uniqueblocks childDisk
+   vmfsPath
+
+OPTIONS FOR DEVICES: 
+
+           -L --lock [reserve|release|lunreset|targetreset|busreset|readkeys|readresv
+                     ] /vmfs/devices/disks/...
+           -B --breaklock /vmfs/devices/disks/...
+
+vmkfstools -H --help
+
+
+vmkfstools -i CentOS-7-x86_64-DVD-1511.vmdk -
+d thin CentOS-7-x86_64-DVD-1511_thin.vmdk
