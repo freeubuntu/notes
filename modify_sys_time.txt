@@ -1,0 +1,7 @@
+[root@zj6 ~]# date
+Thu Aug 29 18:26:32 CST 2019
+[root@zj6 ~]# date -s "Thu Sept 29 12:43:32 CST 2019"
+Sun Sep 29 12:43:32 CST 2019
+[root@zj6 ~]# hwclock -w
+[root@zj6 ~]# date
+Sun Sep 29 12:43:41 CST 2019
