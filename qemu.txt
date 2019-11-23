@@ -6,13 +6,13 @@ qemu-img info source-name.vmdk 查看虚拟机信息
 qemu-img convert -f qcow2 file.qcow2 -O vmdk file.vmdk  
 
 将vmdk转换为qcow2
-
-登录宿主机，在 VMwareWorkstation上检查 A 虚拟机，如果安装了 VMware Tools，以 root用户运行 vmware-uninstall-tools.pl卸载它。
-
-/vmware-tools-distrib/bin/vmware-uninstall-tools.pl
-
-拟机的镜像存储在多个 vmdk文件中，所以需要在前合并
-
-vmware-vdiskmanager.exe -r sourceDisk.vmdk -t 0 destinationDisk.vmdk
 qemu-img convert -f vmdk -O qcow2 source-name.vmdk target-name.qcow2
 
+对磁盘镜像文件进行一致性检查，查找镜像文件中的错误，目前仅支持对“qcow2”、“qed”、“vdi”格式文件的检查
+qemu-img check rhel6u3.qcow2
+
+创建新磁盘
+qemu-img create -f qcow2 ubuntu.qcow2 10G
+
+修改磁盘大小，缩小镜像的大小之前，需要在客户机中保证里面的文件系统有空余空间，否则会数据丢失
+qemu-img resize rhel6u3-a.img +2G
