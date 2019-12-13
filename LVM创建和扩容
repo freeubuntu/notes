@@ -1,0 +1,67 @@
+1.创建
+
+    磁盘分区格式改为LVM
+
+  fdisk /dev/vdb       
+p 	查看分区
+n 	创建分区
+t 	改分区类型（8e为LVM）
+m 	显示帮助
+w 	保存退出
+
+    创建PV
+
+pvcreate /dev/vdb1     #vdb1为创建的分区
+
+    创建VG
+
+vgcreate vgname /dev/vdb1
+
+    在VG上创建LV 
+
+lvcreate -L 99G -n lvname vgname   #-L指定LV大小，–n指定LV名称 后VG名称
+
+    格式化
+
+mkfs -t ext4 /dev/vgname/lvname
+
+ 
+2.扩容
+
+    把分区vda剩余空间创建分区并改为LVM格式
+
+fdisk /dev/vda
+
+p查看分区 n创建分区 t改分区类型（8e为LVM） m显示帮助 w保存退出
+
+reboot重启生效
+
+    选择分区创建为PV
+
+pvcreate /dev/vda3    #vda3为分区名
+
+    选择PV加入到VG
+
+vgextend vgname /dev/vda3
+
+    扩容LV
+
+lvextend -L +14G /dev/VolGroup/LVRoot
+
+    重新调整分区大小
+
+resize2fs /dev/vgname/lvname
+
+ 
+3.挂载
+
+    永久性开机自挂载
+
+vim /etc/fstab添加行
+
+/dev/mapper/vgname-lvname ext4 defaults 0 0
+
+ 
+
+重新加载文件/etc/fstab
+mount a
