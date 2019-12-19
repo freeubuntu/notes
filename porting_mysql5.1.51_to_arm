@@ -1,0 +1,94 @@
+1) 下载mysql5.1.51： 
+    http://www.mirrorservice.org/sites/ftp.mysql.com/Downloads/MySQL-5.1/mysql-5.1.51.tar.gz 
+    
+3) 编译PC版本的mysql备用 
+    a) 解压mysql-5.1.51到/opt/mysql-5.1.51: tar zxvf mysql-5.1.51.tar.gz 
+
+    b) cd mysql-5.1.51 
+    c) ./configure -prefix=/usr/local/mysql 
+
+    d) make 注意，这里无需运行make install，以为主要是为了用pc版本里的gen_lex_hash库。(注意一定要先make后，再去修改文件夹名称) 
+
+    e) 将文件夹mysql-5.1.51改名为mysql-5.1.51-pc备用。（将gen_lex_hash单独备份保存一下） 
+    
+  
+  4) 编译arm版本的ncurses 
+    a) 下载ncurses-5.9.tar.gz：ftp://ftp.gnu.org/gnu/ncurses/ncurses-5.9.tar.gz  
+
+    b) 解压到/opt/中：tar zxvf ncurses-5.9.tar.gz 
+
+    c) cd ncurses-5.6 
+    d) ./configure –host=arm-linux -prefix=/usr/local/ncurse –enable-static 
+
+    e) make 
+    f) make install之所以安装这个，是因为对mysql的交叉编译过程需要该库的支持
+
+      （此步在用sudo make install时出错，原因是环境变量和原来不同了，解决办法：sudo -i；make install） 
+      
+   5) 编译arm版本的mysql 
+    a) tar zxvf mysql-5.1.51.tar.gz 
+
+    b) cd mysql-5.1.51 
+    c) 修改配置文件：打开configure，可以使用gedit configure 分别在第26453行、 48175行、 48282行、 48485行附近有类似代码： 
+        if test "$cross_compiling" = yes; then 
+        { { $as_echo "$as_me:$LINENO: error: in \`$ac_pwd':" >&5 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;} 
+        { { $as_echo "$as_me:$LINENO: error: cannot run test program while cross 
+
+        compiling See \`config.log' for more details." >&5 
+
+        $as_echo "$as_me: error: cannot run test program while cross compiling See \`config.log' for more details." >&2;} 
+        { (exit 1); exit 1; }; }; } 
+
+        Else 
+
+        将这些代码改为： 
+        if test "$cross_compiling" = yes;  then 
+
+        echo “skip …..!” 
+
+        #{ { $as_echo "$as_me:$LINENO: error: in \`$ac_pwd':" >&5 #$as_echo "$as_me: error: in \`$ac_pwd':" >&2;} 
+        #{ { $as_echo "$as_me:$LINENO: error: cannot run test program while cross compiling See \`config.log' for more details." >&5 
+        #$as_echo "$as_me: error: cannot run test program while cross compiling See \`config.log' for more details." >&2;} 
+        #{ (exit 1); exit 1; }; }; } 
+
+        Else 
+
+        一定注意，这样的代码有4部分，要全部改掉。 
+    d) 配置，直接套用了人家的配置方式：
+
+      ./configure --host=arm-linux --enable-static --with-named-curses-libs=/usr/local/ncurse/lib/libncurses.a --prefix=/usr/local/mysql --without-debug --without-docs --without-man --without-bench --with-charset=gb2312 --with-extra-charsets=ascii,latin1,utf8
+
+    e) 修改opt/mysql-5.1.51/sql/sql_parse.cc：在5646行之前添加#define STACK_DIRECTION 1 
+        如果不修改该语句，则会出现如下错误：sql_parse.cc:5646:21: operator '<' has no left operand，原因是宏变量STACK_DIRECTION没有定义初值，arm中定义STACK_DIRECTION为1。 
+        注意：这里的“#define STACK_DIRECTION 1”一句，不能随便加在sql_parse.cc的开头处，而应该根据出错信息的提示添加在相应的行上，我所遇到的行号和别人文档上所遇到的行号并不相同。 
+    f) 复制PC版本的gen_lex_hash文件到当前文件夹：
+
+       cp  /opt/mysql-5.1.51-pc/sql/gen_lex_hash sql/ 
+
+       touch –m sql/gen_lex_hash  
+       cp  /opt/mysql-5.1.51-pc/sql/ lex_hash.h sql/ 
+
+       touch –m sql/ lex_hash.h 
+       否则会出现错误： 
+       make[2]: Leaving directory `/opt/mysql-5.5.3-m3/sql' ./gen_lex_hash > lex_hash.h-t 
+       /bin/sh: ./gen_lex_hash: cannot execute binary file 因为arm版的无法在pc上运行。
+
+       注意：别人的文档上说只要拷贝gen_lex_hash即可，但我试了好多次，都仍然会出现上面的报错信息，把lex_hash.h也拷贝过来后，就不再报错了。另外，touch一定要做，原因就是让编译器不要再编译覆盖拷贝过来的文件了。
+
+   g) Make 
+
+   h) Make install 
+   
+ 6) 移植相应文件到ARM平台 
+ 
+   d) 运行mysql_install_db（参见手册的2.13. Post-Installation Setup and Testing） 
+       cd /usr/local/mysql/bin（开发板路径），运行mysql_install_db -u root  结果出现了如下错误：Neither host 'EmbedSky' nor 'localhost' could be looked up with /usr/local/mysql/bin/resolveip Please configure the 'hostname' command to return a correct hostname. If you want to solve this at a later stage, restart this script with the --force option 这主要的原因是开发板环境中的hostname是EmbedSky，而不是通常的Federa14等，所以mysql自动认为可能在该操作系统中的运行会不兼容，有两种办法解决： 
+         第一种，运行hostname fedora14，就是欺骗一下hostname；
+
+         第二种，运行mysql_install_db -u root –force 
+         
+  mkdir /usr/local 0p
+  ln -s /mnt/ARM/sql /usr/local/sql
+  mysqld_safe --user=root &
+         
+    
