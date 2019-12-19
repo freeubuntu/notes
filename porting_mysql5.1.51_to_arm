@@ -90,5 +90,18 @@
   mkdir /usr/local 0p
   ln -s /mnt/ARM/sql /usr/local/sql
   mysqld_safe --user=root &
+
          
+centos-7 /usr/bin/ld: cannot find -lz 解决
+yum install zlib-devel
+
+
+mysql.cc:1565:1: error: narrowing conversion of ‘18446744073709551615’ from ‘long unsigned int’ to ‘longlong {aka long long int}’ inside { } [-Wnarrowing]
+ };
+ ^
+mysql.cc:1565:1: error: narrowing conversion of ‘18446744073709551615’ from ‘long unsigned int’ to ‘longlong {aka long long int}’ inside { } [-Wnarrowing]
+
+修改Makefile CXXFLAGS添加-Wno-narrowing
     
+编译centos7版本comp_err
+../libtool --preserve-dup-deps --tag=CXX   --mode=link g++  -O3    -fno-implicit-templates -fno-exceptions -fno-rtti  -rdynamic -o comp_err comp_err.c ../mysys/libmysys.a ../dbug/libdbug.a ../strings/libmystrings.a -lz -lpthread -lcrypt -lnsl -lm  -lpthread -I ../include
