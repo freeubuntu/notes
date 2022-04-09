@@ -1,0 +1,5 @@
+cat ../1.txt | while read myline
+do
+	echo $myline
+	sed -i "s/$myline/fb_$myline/g" `grep -rl $my_line .`
+done

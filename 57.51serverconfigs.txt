@@ -1,0 +1,45 @@
+[root@BasicOne ~]# dpdk-devbind -s
+
+Network devices using DPDK-compatible driver
+============================================
+0000:02:00.0 'I350 Gigabit Network Connection' drv=vfio-pci unused=igb,igb_uio
+0000:02:00.1 'I350 Gigabit Network Connection' drv=vfio-pci unused=igb,igb_uio
+0000:02:00.2 'I350 Gigabit Network Connection' drv=vfio-pci unused=igb,igb_uio
+0000:02:00.3 'I350 Gigabit Network Connection' drv=vfio-pci unused=igb,igb_uio
+0000:03:00.0 'I350 Gigabit Network Connection' drv=igb_uio unused=igb,vfio-pci(for internet connection)
+0000:81:00.0 'I350 Gigabit Network Connection' drv=vfio-pci unused=igb,igb_uio
+0000:81:00.1 'I350 Gigabit Network Connection' drv=vfio-pci unused=igb,igb_uio
+
+Network devices using kernel driver
+===================================
+0000:03:00.1 'I350 Gigabit Network Connection' if=enp3s0f1 drv=igb unused=igb_uio,vfio-pci 
+0000:81:00.2 'I350 Gigabit Network Connection' if=ens5f2 drv=igb unused=igb_uio,vfio-pci (to connect other server)
+0000:81:00.3 'I350 Gigabit Network Connection' if=ens5f3 drv=igb unused=igb_uio,vfio-pci (to connect other server)
+
+Other network devices
+=====================
+<none>
+
+Crypto devices using DPDK-compatible driver
+===========================================
+<none>
+
+Crypto devices using kernel driver
+==================================
+<none>
+
+Other crypto devices
+====================
+<none>
+[root@BasicOne ~]# 
+
+internet connection interface
+NIC_PCI=0000:03:00.0
+dpdk-devbind -b igb_uio $NIC_PCI
+ovs-vsctl --may-exist add-port br-public dpdk1 -- set interface dpdk1 type=dpdk options:dpdk-devargs=$NIC_PCI
+NIC_NAME=enp3s0f0
+ifconfig $NIC_NAME 0
+
+
+
+
