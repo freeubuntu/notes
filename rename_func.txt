@@ -1,3 +1,4 @@
+1.txt为linux格式，不能有\r\n
 cat ../1.txt | while read myline
 do
 	echo $myline
